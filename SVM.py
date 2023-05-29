@@ -111,6 +111,7 @@ for i in ratiovalues:
 plt.plot(ratiovalues, train_scores, "-o", label="Train")
 plt.plot(ratiovalues, test_scores, "-o", label="Test")
 plt.legend()
+plt.savefig("figures/accuracy_plot.png")
 plt.show()
 
 
