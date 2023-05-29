@@ -35,7 +35,7 @@ if method == "one_hot":
     final_data.drop(["enrollee_id"], axis=1, inplace=True)
     final_data.to_csv(save_path, index=False)
 
-else:
+elif method == "label_encode":
     label_encoder = LabelEncoder()
     scaler = MinMaxScaler()
 
@@ -59,3 +59,6 @@ else:
 
     # Output
     final_data.to_csv(save_path, index=False)
+
+else:
+    raise Exception("Invalid encoder! Please enter a valid encoder: 'one_hot' or 'label_encode'.")
