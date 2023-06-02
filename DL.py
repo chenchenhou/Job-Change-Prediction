@@ -16,6 +16,7 @@ def get_parser():
     parser.add_argument("--data_path", help="Path to data csv file.", type=str, default="./aug_train_preprocessed_onehot.csv")
     parser.add_argument("--ckpt_dir", help="Checkpoints directory.", type=str, default="./checkpoints/")
     parser.add_argument("--weighted_sampler", help="Use weighted sampler or not. (Yes or No)", type=str, default="No")
+    parser.add_argument("--run_name", help="Name of the run for wandb", type=str, default="base")
     return parser
 
 
@@ -24,6 +25,7 @@ args = parser.parse_args()
 data_path = args.data_path
 ckpt_dir = args.ckpt_dir
 weighted = args.weighted_sampler
+run_name = args.run_name
 
 wandb.login()
 
@@ -136,7 +138,7 @@ if weighted == "No":
     train_loader = DataLoader(train_set, batch_size=config["batch size"], shuffle=True)
     val_loader = DataLoader(val_set, batch_size=config["batch size"], shuffle=False)
 else:
-    train_loader = DataLoader(train_set, batch_size=config["batch size"], shuffle=True, sampler=weighted_sampler)
+    train_loader = DataLoader(train_set, batch_size=config["batch size"], shuffle=False, sampler=weighted_sampler)
     val_loader = DataLoader(val_set, batch_size=config["batch size"], shuffle=False)
 
 model = DNN(config["input dim"])
@@ -147,7 +149,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "max", patienc
 n_epochs = config["epoch"]
 criterion = nn.BCELoss()
 
-wandb.init(project="Job Change Prediction", config=config, name="onehot_encoding_base")
+wandb.init(project="Job Change Prediction", config=config, name=run_name)
 
 best_val_acc = 0
 for epoch in range(1, n_epochs + 1):
@@ -158,7 +160,6 @@ for epoch in range(1, n_epochs + 1):
     print(f"Epoch {epoch}...")
     for i, (instances, labels) in enumerate(train_loader):
         instances, labels = instances.to(device), labels.to(device)
-        # criterion = nn.BCELoss(weight = weights)
         optimizer.zero_grad()
         preds = model(instances)
         loss = criterion(preds, labels)
@@ -177,7 +178,6 @@ for epoch in range(1, n_epochs + 1):
 
     for i, (instances, labels) in enumerate(val_loader):
         instances, labels = instances.to(device), labels.to(device)
-        # criterion = nn.BCELoss(weight = weights)
         with torch.no_grad():
             preds = model(instances)
             loss = criterion(preds, labels)
