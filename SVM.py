@@ -30,13 +30,13 @@ def print_data(data):
     print(data.values)
 
     numpy_data = data.values
-    train_data, valid_data = train_valid_split(numpy_data, valid_ratio=0.2, seed=724)
+    train_data, valid_data = train_valid_split(numpy_data, valid_ratio=0.2, seed=2023)
     print(f"Training data: {train_data.shape[0]}")
     print(f"Validation data: {valid_data.shape[0]}")
 
 
 # Read and print data
-data = pd.read_csv("aug_train_preprocessed_onehot.csv")
+data = pd.read_csv("aug_train_preprocessed.csv")
 print_data(data)
 
 
@@ -80,7 +80,7 @@ for i in range(conf_matrix.shape[0]):
 plt.xlabel("Predictions", fontsize=18)
 plt.ylabel("Actuals", fontsize=18)
 plt.title("Confusion Matrix", fontsize=18)
-plt.savefig("figures/confusion_matrix.png")
+plt.savefig("figures/confusion_matrix_label.png")
 plt.show()
 
 
@@ -111,8 +111,8 @@ for i in ratiovalues:
 plt.plot(ratiovalues, train_scores, "-o", label="Train")
 plt.plot(ratiovalues, test_scores, "-o", label="Test")
 plt.legend()
-plt.savefig("figures/accuracy_plot.png")
-plt.show()
+plt.savefig("figures/accuracy_plot_label.png")
+# plt.show()
 
 
 # Sort important feature or feature importances by importances
@@ -128,8 +128,8 @@ def plot_feature_importances(model, feature_names, top_n=5):
     plt.xlabel("Feature importance")
     plt.ylabel("Feature")
     plt.ylim(-1, top_n)
-    plt.savefig("figures/feature_importance.png")
-    plt.show()
+    plt.savefig("figures/feature_importance_label.png")
+    # plt.show()
 
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2023)
