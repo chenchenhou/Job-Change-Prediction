@@ -3,6 +3,8 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import math
+from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import ADASYN
 import os
 from tqdm import tqdm
 import wandb
@@ -15,7 +17,7 @@ def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_path", help="Path to data csv file.", type=str, default="./aug_train_preprocessed_onehot.csv")
     parser.add_argument("--ckpt_dir", help="Checkpoints directory.", type=str, default="./checkpoints/")
-    parser.add_argument("--weighted_sampler", help="Use weighted sampler or not. (Yes or No)", type=str, default="No")
+    parser.add_argument("--imbalancing_method", help="Use weighted_sampler or SMOTE or ADASYN.", type=str, default="No")
     parser.add_argument("--run_name", help="Name of the run for wandb", type=str, default="base")
     return parser
 
@@ -24,8 +26,9 @@ parser = get_parser()
 args = parser.parse_args()
 data_path = args.data_path
 ckpt_dir = args.ckpt_dir
-weighted = args.weighted_sampler
+imbalancing_method = args.imbalancing_method
 run_name = args.run_name
+oversampling = args.oversampling
 
 wandb.login()
 
@@ -134,13 +137,31 @@ config = {
 train_set = JobDataset(train_data)
 val_set = JobDataset(valid_data)
 
-if weighted == "No":
+if imbalancing_method == "No":
     train_loader = DataLoader(train_set, batch_size=config["batch size"], shuffle=True)
     val_loader = DataLoader(val_set, batch_size=config["batch size"], shuffle=False)
-else:
+elif imbalancing_method == "weighted_sampler":
     train_loader = DataLoader(train_set, batch_size=config["batch size"], shuffle=False, sampler=weighted_sampler)
     val_loader = DataLoader(val_set, batch_size=config["batch size"], shuffle=False)
-
+elif imbalancing_method == "SMOTE":
+    X = train_data[:, :-1]  # your feature matrix
+    y = train_data[:, -1].astype('int')  # your target vector (with binary classes 0 and 1)
+    smote = SMOTE(random_state=42)
+    X_resampled, y_resampled = smote.fit_resample(X, y)
+    balance_train_data = np.concatenate((X_resampled, np.expand_dims(y_resampled, axis = 1)), axis = 1)
+    train_set = JobDataset(balance_train_data)
+    train_loader = DataLoader(train_set, batch_size=config['batch size'], shuffle=True)
+    val_loader = DataLoader(val_set, batch_size=config['batch size'], shuffle=False)
+elif imbalancing_method == "ADASYN":
+    X = train_data[:, :-1]  # your feature matrix
+    y = train_data[:, -1].astype('int')  # your target vector (with binary classes 0 and 1)
+    smote = ADASYN(random_state=42)
+    X_resampled, y_resampled = smote.fit_resample(X, y)
+    balance_train_data = np.concatenate((X_resampled, np.expand_dims(y_resampled, axis = 1)), axis = 1)
+    train_set = JobDataset(balance_train_data)
+    train_loader = DataLoader(train_set, batch_size=config['batch size'], shuffle=True)
+    val_loader = DataLoader(val_set, batch_size=config['batch size'], shuffle=False)
+    
 model = DNN(config["input dim"])
 model = model.to(device)
 
